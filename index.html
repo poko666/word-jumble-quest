@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <title>英文單字拼拼樂 (語音題目版)</title>
+  <title>英文單字拼拼樂 (支援空白)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
@@ -103,7 +103,7 @@
 
     <!-- 建立單字清單區 -->
     <h3>建立新的單字清單</h3>
-    <textarea id="wordListInput" placeholder="請輸入單字，用逗號分隔 (例如: APPLE,HOUSE,TRAIN)"></textarea>
+    <textarea id="wordListInput" placeholder="請輸入單字，用逗號分隔 (例如: APPLE,HOUSE,ICE CREAM)"></textarea>
     <input type="text" id="listNameInput" placeholder="清單名稱 (例如: 水果單字)">
     <button onclick="createWordList()">建立清單</button>
 
@@ -196,7 +196,7 @@
       }
 
       let word = words[currentIndex];
-      let letters = shuffle(word.split(""));
+      let letters = shuffle(word.replace(/ /g, "").split("")); // ⚡ 空白不加入亂序字母
 
       let lettersDiv = document.getElementById("letters");
       lettersDiv.innerHTML = "";
@@ -215,9 +215,19 @@
       let answerDiv = document.getElementById("answer");
       answerDiv.innerHTML = "";
       for (let i = 0; i < word.length; i++) {
-        let slot = document.createElement("div");
-        slot.className = "slot";
-        answerDiv.appendChild(slot);
+        if (word[i] === " ") {
+          // ⚡ 空白 → 固定空格
+          let blank = document.createElement("div");
+          blank.className = "slot";
+          blank.style.border = "none";
+          blank.style.background = "transparent";
+          blank.innerText = " ";
+          answerDiv.appendChild(blank);
+        } else {
+          let slot = document.createElement("div");
+          slot.className = "slot";
+          answerDiv.appendChild(slot);
+        }
       }
 
       // 出題時念整個單字
@@ -240,7 +250,9 @@
 
     function clearAnswer() {
       let slots = document.querySelectorAll("#answer .slot");
-      slots.forEach(s => s.innerText = "");
+      slots.forEach(s => {
+        if (s.innerText !== " ") s.innerText = ""; // 空白不清除
+      });
       let letters = document.querySelectorAll("#letters .letter");
       letters.forEach(l => l.style.visibility = "visible");
     }
@@ -261,9 +273,10 @@
     function checkAnswer() {
       let slots = document.querySelectorAll("#answer .slot");
       let attempt = Array.from(slots).map(s => s.innerText).join("");
-      if (attempt.length === words[currentIndex].length) {
-        if (attempt === words[currentIndex]) {
-          speakWord(attempt); // 答對再念一次
+
+      if (attempt.replace(/ /g, "").length === words[currentIndex].replace(/ /g, "").length) {
+        if (attempt.trim() === words[currentIndex]) {
+          speakWord(words[currentIndex]); // 答對再念一次
           alert("答對了！");
           correctCount++;
         } else {
