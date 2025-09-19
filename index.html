@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <title>英文單字拼拼樂 (最終修正版)</title>
+  <title>英文單字拼拼樂 (含刪除清單)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
@@ -56,6 +56,8 @@
       background: #4caf50; color: white; cursor: pointer;
     }
     button:hover { background: #45a049; }
+    .delete-btn { background: #e53935; }
+    .delete-btn:hover { background: #c62828; }
     textarea, input, select {
       width: 90%; max-width: 400px;
       margin: 5px auto; padding: 8px;
@@ -75,12 +77,15 @@
     <input type="text" id="listNameInput" placeholder="清單名稱 (例如: 水果單字)">
     <button onclick="createWordList()">建立清單</button>
 
-    <!-- 選擇清單下拉 -->
+    <!-- 選擇清單下拉 + 刪除 -->
     <h3>選擇單字清單</h3>
     <select id="wordListSelect"></select>
-    <button onclick="startGame()">開始遊戲</button>
-    <button onclick="giveHint()">提示</button>
-    <button onclick="clearAnswer()">清除答案</button>
+    <div>
+      <button onclick="startGame()">開始遊戲</button>
+      <button onclick="giveHint()">提示</button>
+      <button onclick="clearAnswer()">清除答案</button>
+      <button class="delete-btn" onclick="deleteWordList()">刪除清單</button>
+    </div>
 
     <div id="letters"></div>
     <div id="answer"></div>
@@ -118,6 +123,21 @@
       alert(`已建立清單「${listName}」！`);
       document.getElementById("wordListInput").value = "";
       document.getElementById("listNameInput").value = "";
+    }
+
+    function deleteWordList() {
+      let select = document.getElementById("wordListSelect");
+      let chosenList = select.value;
+      if (!chosenList) {
+        alert("請先選擇要刪除的清單！");
+        return;
+      }
+      if (confirm(`確定要刪除清單「${chosenList}」嗎？`)) {
+        delete wordLists[chosenList];
+        saveLists();
+        updateSelectOptions();
+        alert(`已刪除清單「${chosenList}」！`);
+      }
     }
 
     function updateSelectOptions() {
@@ -158,7 +178,7 @@
       }
 
       let word = words[currentIndex];
-      let letters = shuffle(word.replace(/ /g, "").split("")); // 空白不進字母庫
+      let letters = shuffle(word.replace(/ /g, "").split(""));
 
       let lettersDiv = document.getElementById("letters");
       lettersDiv.innerHTML = "";
@@ -187,7 +207,7 @@
         }
       }
 
-      speakWord(word); // 出題自動念
+      speakWord(word);
       updateProgress();
     }
 
@@ -200,7 +220,6 @@
           break;
         }
       }
-      // ⚡ 延遲一點再檢查，確保最後一個字母顯示出來
       setTimeout(checkAnswer, 100);
     }
 
