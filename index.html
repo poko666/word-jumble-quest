@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <title>英文單字拼拼樂 (支援空白)</title>
+  <title>英文單字拼拼樂 (空白修正版)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
@@ -12,87 +12,55 @@
       margin: 0;
       background: #f5f5f5;
     }
-
-    h1 {
-      font-size: clamp(20px, 5vw, 32px);
-    }
-
-    #game-container {
-      max-width: 95vw;
-      margin: 0 auto;
-    }
-
+    h1 { font-size: clamp(20px, 5vw, 32px); }
+    #game-container { max-width: 95vw; margin: 0 auto; }
     #letters {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin: 10px auto;
-      gap: 8px;
+      display: flex; flex-wrap: wrap; justify-content: center;
+      margin: 10px auto; gap: 8px;
     }
-
     .letter {
       flex: 1 1 auto;
-      min-width: 40px;
-      max-width: 60px;
+      min-width: 40px; max-width: 60px;
       padding: 10px;
-      border: 2px solid #333;
-      border-radius: 8px;
-      background: #fff;
-      font-size: clamp(18px, 5vw, 28px);
-      cursor: pointer;
-      user-select: none;
-      transition: background 0.2s;
+      border: 2px solid #333; border-radius: 8px;
+      background: #fff; font-size: clamp(18px, 5vw, 28px);
+      cursor: pointer; user-select: none; transition: background 0.2s;
     }
     .letter:active { background: #ddd; }
-
     #answer {
-      min-height: 50px;
-      border: 2px dashed #666;
-      margin: 15px auto;
-      display: flex;
-      justify-content: center;
-      gap: 6px;
-      padding: 10px;
-      flex-wrap: wrap;
-      max-width: 95vw;
+      min-height: 50px; border: 2px dashed #666; margin: 15px auto;
+      display: flex; justify-content: center; gap: 6px; padding: 10px;
+      flex-wrap: wrap; max-width: 95vw;
     }
-
     .slot {
       width: clamp(35px, 8vw, 55px);
       height: clamp(35px, 8vw, 55px);
       border: 1px solid #aaa;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      display: flex; justify-content: center; align-items: center;
       font-size: clamp(18px, 5vw, 28px);
       background: #fff;
     }
-
-    #progress {
-      margin-top: 10px;
-      font-size: clamp(14px, 4vw, 18px);
-    }
-
-    button {
-      margin: 5px;
-      padding: 8px 16px;
-      font-size: clamp(14px, 4vw, 18px);
-      border-radius: 6px;
+    .blank-slot {
+      width: clamp(35px, 8vw, 55px);
+      height: clamp(35px, 8vw, 55px);
+      display: flex; justify-content: center; align-items: center;
+      font-size: clamp(18px, 5vw, 28px);
+      background: transparent;
       border: none;
-      background: #4caf50;
-      color: white;
-      cursor: pointer;
+    }
+    #progress { margin-top: 10px; font-size: clamp(14px, 4vw, 18px); }
+    button {
+      margin: 5px; padding: 8px 16px;
+      font-size: clamp(14px, 4vw, 18px);
+      border-radius: 6px; border: none;
+      background: #4caf50; color: white; cursor: pointer;
     }
     button:hover { background: #45a049; }
-
     textarea, input, select {
-      width: 90%;
-      max-width: 400px;
-      margin: 5px auto;
-      padding: 8px;
+      width: 90%; max-width: 400px;
+      margin: 5px auto; padding: 8px;
       font-size: clamp(14px, 4vw, 16px);
-      border: 1px solid #ccc;
-      border-radius: 5px;
+      border: 1px solid #ccc; border-radius: 5px;
       display: block;
     }
   </style>
@@ -125,7 +93,6 @@
     let currentIndex = 0;
     let correctCount = 0;
 
-    // 載入 localStorage
     window.onload = function() {
       let savedLists = localStorage.getItem("wordLists");
       if (savedLists) {
@@ -141,15 +108,9 @@
     function createWordList() {
       let rawWords = document.getElementById("wordListInput").value.trim();
       let listName = document.getElementById("listNameInput").value.trim();
-      if (!rawWords || !listName) {
-        alert("請輸入清單名稱與單字！");
-        return;
-      }
+      if (!rawWords || !listName) { alert("請輸入清單名稱與單字！"); return; }
       let wordArray = rawWords.split(",").map(w => w.trim().toUpperCase()).filter(w => w.length > 0);
-      if (wordArray.length === 0) {
-        alert("單字清單不能為空！");
-        return;
-      }
+      if (wordArray.length === 0) { alert("單字清單不能為空！"); return; }
       wordLists[listName] = wordArray;
       updateSelectOptions();
       saveLists();
@@ -204,11 +165,7 @@
         let span = document.createElement("div");
         span.className = "letter";
         span.innerText = l;
-
-        span.addEventListener("click", () => {
-          fillAnswer(l, span);
-        });
-
+        span.addEventListener("click", () => { fillAnswer(l, span); });
         lettersDiv.appendChild(span);
       });
 
@@ -216,30 +173,27 @@
       answerDiv.innerHTML = "";
       for (let i = 0; i < word.length; i++) {
         if (word[i] === " ") {
-          // ⚡ 空白 → 固定空格
           let blank = document.createElement("div");
-          blank.className = "slot";
-          blank.style.border = "none";
-          blank.style.background = "transparent";
+          blank.className = "blank-slot";
           blank.innerText = " ";
+          blank.dataset.blank = "true"; // ⚡ 標記為空白
           answerDiv.appendChild(blank);
         } else {
           let slot = document.createElement("div");
           slot.className = "slot";
+          slot.dataset.blank = "false";
           answerDiv.appendChild(slot);
         }
       }
 
-      // 出題時念整個單字
-      speakWord(word);
-
+      speakWord(word); // 出題時念整個單字
       updateProgress();
     }
 
     function fillAnswer(letter, element) {
       let slots = document.querySelectorAll("#answer .slot");
       for (let slot of slots) {
-        if (slot.innerText === "") {
+        if (slot.dataset.blank === "false" && slot.innerText === "") {
           slot.innerText = letter;
           element.style.visibility = "hidden";
           break;
@@ -250,9 +204,7 @@
 
     function clearAnswer() {
       let slots = document.querySelectorAll("#answer .slot");
-      slots.forEach(s => {
-        if (s.innerText !== " ") s.innerText = ""; // 空白不清除
-      });
+      slots.forEach(s => { if (s.dataset.blank === "false") s.innerText = ""; });
       let letters = document.querySelectorAll("#letters .letter");
       letters.forEach(l => l.style.visibility = "visible");
     }
@@ -271,19 +223,17 @@
     }
 
     function checkAnswer() {
-      let slots = document.querySelectorAll("#answer .slot");
+      let slots = document.querySelectorAll("#answer .slot, #answer .blank-slot");
       let attempt = Array.from(slots).map(s => s.innerText).join("");
 
       if (attempt.replace(/ /g, "").length === words[currentIndex].replace(/ /g, "").length) {
-        if (attempt.trim() === words[currentIndex]) {
-          speakWord(words[currentIndex]); // 答對再念一次
+        if (attempt === words[currentIndex]) {
+          speakWord(words[currentIndex]);
           alert("答對了！");
           correctCount++;
         } else {
           alert("答錯了，再試一次！");
         }
-
-        // 延遲 1.5 秒後才進入下一題
         setTimeout(() => {
           currentIndex++;
           loadWord();
