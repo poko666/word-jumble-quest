@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>英文單字拼拼樂</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+    #letters { display: flex; justify-content: center; margin: 20px; gap: 10px; }
+    .letter {
+      padding: 15px 20px; border: 2px solid #333; border-radius: 8px;
+      background: #f9f9f9; font-size: 24px; cursor: grab;
+    }
+    #answer {
+      min-height: 60px; border: 2px dashed #666; margin: 20px auto;
+      display: flex; justify-content: center; gap: 10px; padding: 10px;
+    }
+    .slot {
+      width: 40px; height: 40px; border: 1px solid #aaa;
+      display: flex; justify-content: center; align-items: center;
+      font-size: 24px; background: #fff;
+    }
+    #progress { margin-top: 20px; font-size: 18px; }
+    button { margin: 10px; padding: 10px 20px; font-size: 16px; }
+    #wordListInput { width: 80%; height: 100px; }
+  </style>
+</head>
+<body>
+  <h1>英文單字拼拼樂</h1>
+
+  <!-- 建立單字清單區 -->
+  <h3>建立新的單字清單</h3>
+  <textarea id="wordListInput" placeholder="請輸入單字，用逗號分隔 (例如: APPLE,HOUSE,TRAIN)"></textarea><br>
+  <input type="text" id="listNameInput" placeholder="清單名稱 (例如: 水果單字)">
+  <button onclick="createWordList()">建立清單</button>
+
+  <!-- 選擇清單下拉 -->
+  <h3>選擇單字清單</h3>
+  <select id="wordListSelect"></select>
+  <button onclick="startGame()">開始遊戲</button>
+
+  <div id="letters"></div>
+  <div id="answer"></div>
+  <div id="progress"></div>
+
+  <script>
+    let wordLists = {};   // 儲存多組單字清單
+    let words = [];       // 當前遊戲使用的清單
+    let currentIndex = 0;
+    let correctCount = 0;
+
+    // 載入 localStorage 的清單
+    window.onload = function() {
+      let savedLists = localStorage.getItem("wordLists");
+      if (savedLists) {
+        wordLists = JSON.parse(savedLists);
+        updateSelectOptions();
+      }
+    }
+
+    // 儲存到 localStorage
+    function saveLists() {
+      localStorage.setItem("wordLists", JSON.stringify(wordLists));
+    }
+
+    // 建立新的單字清單
+    function createWordList() {
+      let rawWords = document.getElementById("wordListInput").value.trim();
+      let listName = document.getElementById("listNameInput").value.trim();
+
+      if (!rawWords || !listName) {
+        alert("請輸入清單名稱與單字！");
+        return;
+      }
+
+      let wordArray = rawWords.split(",").map(w => w.trim().toUpperCase()).filter(w => w.length > 0);
+      if (wordArray.length === 0) {
+        alert("單字清單不能為空！");
+        return;
+      }
+
+      wordLists[listName] = wordArray;
+
+      // 更新下拉選單 & 儲存
+      updateSelectOptions();
+      saveLists();
+
+      alert(`已建立清單「${listName}」！`);
+      document.getElementById("wordListInput").value = "";
+      document.getElementById("listNameInput").value = "";
+    }
+
+    // 更新下拉選單
+    function updateSelectOptions() {
+      let select = document.getElementById("wordListSelect");
+      select.innerHTML = "";
+      for (let key in wordLists) {
+        let option = document.createElement("option");
+        option.value = key;
+        option.innerText = key;
+        select.appendChild(option);
+      }
+    }
+
+    // 洗牌
+    function shuffle(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+    // 開始遊戲
+    function startGame() {
+      let select = document.getElementById("wordListSelect");
+      let chosenList = select.value;
+
+      if (!chosenList || !wordLists[chosenList]) {
+        alert("請先建立並選擇單字清單！");
+        return;
+      }
+
+      words = [...wordLists[chosenList]];
+      currentIndex = 0;
+      correctCount = 0;
+      loadWord();
+    }
+
+    function loadWord() {
+      if (currentIndex >= words.length) {
+        document.getElementById("letters").innerHTML = "";
+        document.getElementById("answer").innerHTML = "";
+        document.getElementById("progress").innerText =
+          `遊戲結束！共答對 ${correctCount} / ${words.length}`;
+        return;
+      }
+
+      let word = words[currentIndex];
+      let letters = shuffle(word.split(""));
+
+      let lettersDiv = document.getElementById("letters");
+      lettersDiv.innerHTML = "";
+      letters.forEach(l => {
+        let span = document.createElement("div");
+        span.className = "letter";
+        span.draggable = true;
+        span.innerText = l;
+        span.addEventListener("dragstart", drag);
+        lettersDiv.appendChild(span);
+      });
+
+      let answerDiv = document.getElementById("answer");
+      answerDiv.innerHTML = "";
+      for (let i = 0; i < word.length; i++) {
+        let slot = document.createElement("div");
+        slot.className = "slot";
+        slot.addEventListener("dragover", allowDrop);
+        slot.addEventListener("drop", drop);
+        answerDiv.appendChild(slot);
+      }
+
+      updateProgress();
+    }
+
+    function drag(ev) {
+      ev.dataTransfer.setData("text", ev.target.innerText);
+    }
+
+    function allowDrop(ev) {
+      ev.preventDefault();
+    }
+
+    function drop(ev) {
+      ev.preventDefault();
+      let data = ev.dataTransfer.getData("text");
+      if (ev.target.className === "slot" && ev.target.innerText === "") {
+        ev.target.innerText = data;
+        checkAnswer();
+      }
+    }
+
+    function checkAnswer() {
+      let slots = document.querySelectorAll("#answer .slot");
+      let attempt = Array.from(slots).map(s => s.innerText).join("");
+      if (attempt.length === words[currentIndex].length) {
+        if (attempt === words[currentIndex]) {
+          alert("答對了！");
+          correctCount++;
+        } else {
+          alert("答錯了，再試一次！");
+        }
+        currentIndex++;
+        loadWord();
+      }
+    }
+
+    function updateProgress() {
+      document.getElementById("progress").innerText =
+        `進度：${currentIndex + 1} / ${words.length}　已答對：${correctCount}`;
+    }
+  </script>
+</body>
+</html>
