@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <title>英文單字拼拼樂 (空白修正版)</title>
+  <title>英文單字拼拼樂 (最終修正版)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
@@ -93,6 +93,7 @@
     let currentIndex = 0;
     let correctCount = 0;
 
+    // 載入 localStorage
     window.onload = function() {
       let savedLists = localStorage.getItem("wordLists");
       if (savedLists) {
@@ -157,7 +158,7 @@
       }
 
       let word = words[currentIndex];
-      let letters = shuffle(word.replace(/ /g, "").split("")); // ⚡ 空白不加入亂序字母
+      let letters = shuffle(word.replace(/ /g, "").split("")); // 空白不進字母庫
 
       let lettersDiv = document.getElementById("letters");
       lettersDiv.innerHTML = "";
@@ -176,7 +177,7 @@
           let blank = document.createElement("div");
           blank.className = "blank-slot";
           blank.innerText = " ";
-          blank.dataset.blank = "true"; // ⚡ 標記為空白
+          blank.dataset.blank = "true";
           answerDiv.appendChild(blank);
         } else {
           let slot = document.createElement("div");
@@ -186,7 +187,7 @@
         }
       }
 
-      speakWord(word); // 出題時念整個單字
+      speakWord(word); // 出題自動念
       updateProgress();
     }
 
@@ -199,7 +200,8 @@
           break;
         }
       }
-      checkAnswer();
+      // ⚡ 延遲一點再檢查，確保最後一個字母顯示出來
+      setTimeout(checkAnswer, 100);
     }
 
     function clearAnswer() {
